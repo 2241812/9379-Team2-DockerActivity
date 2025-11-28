@@ -552,7 +552,7 @@ function initializeApp() {
 
     App.UpdateChecker = {
         poll: () => {
-            // FIXED PATH FOR DOCKER
+           
             fetch('server-user/getMapVersion.php')
                 .then(r => r.ok ? r.json() : null)
                 .then(data => {
@@ -666,7 +666,7 @@ function initializeApp() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-   // FIXED PATH FOR DOCKER
+
    fetch('server-user/getData.php')
         .then(response => {
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);

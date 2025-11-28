@@ -1,10 +1,4 @@
-/**
- * home-page_script.js
- * Handles animations, navigation, and ensures a clean session state.
- */
 
-// 1. Define the Reset Logic Globally
-// This ensures we can call it immediately whenever the page is shown.
 function resetHomePageUI() {
     const introScreen = document.getElementById('intro-screen');
     const loadingScreen = document.getElementById('loading-screen');
@@ -89,7 +83,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// 4. THE FIX: Run Reset on "Page Show"
 // This event fires every time the page appears, including "Back" navigation.
 window.addEventListener('pageshow', (event) => {
     resetHomePageUI();

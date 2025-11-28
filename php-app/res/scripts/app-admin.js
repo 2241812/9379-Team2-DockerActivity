@@ -59,15 +59,13 @@ App.AdminEditor = {
     },
 
     shutdown: () => {
-        // Cleanup logic if needed...
+    
         window.removeEventListener('mousemove', App.AdminEditor.drag);
         window.removeEventListener('mouseup', App.AdminEditor.endDrag);
         App.AdminEditor.setEditMode(null);
     },
 
-    // ... (Your other handlers: handleSetEditMode, handleMapClick, handleAddNewFloor, etc. remain unchanged) ...
-    // I am pasting the critical fix below. Keep your other logic for dragging/adding nodes as is.
-
+  
     handleSetEditMode: (event) => {
         const btn = event.currentTarget;
         App.AdminEditor.setEditMode(btn);
@@ -210,7 +208,6 @@ App.AdminEditor = {
         });
     },
 
-    // --- NEW: Handle Image Upload ---
     handleUploadFloorPlan: (e) => {
         e.preventDefault();
         const formData = new FormData(e.target);
@@ -229,7 +226,6 @@ App.AdminEditor = {
         .catch(err => console.error(err));
     },
 
-    // ... (Dragging logic remains exactly the same as your previous file) ...
     startDrag: (evt, nodeId) => {
         if (App.AdminEditor.editMode.mode) return;
         evt.preventDefault();

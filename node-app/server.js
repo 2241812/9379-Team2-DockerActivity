@@ -44,7 +44,6 @@ async function getConnection() {
         } catch (err) {
             console.log(`Database not ready yet... Retrying (${retries} attempts left)`);
             retries--;
-            // Wait 2 seconds before trying again
             await new Promise(res => setTimeout(res, 2000));
         }
     }
@@ -100,8 +99,6 @@ app.post('/api/admin/save-map', requireAdmin, async (req, res) => {
     try {
         conn = await getConnection();
         await conn.beginTransaction();
-
-        // ... (Truncates and Inserts for nodes/edges remain the same) ...
         await conn.query('SET FOREIGN_KEY_CHECKS = 0');
         await conn.query('TRUNCATE TABLE nodes');
         await conn.query('TRUNCATE TABLE edges');
