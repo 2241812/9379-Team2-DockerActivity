@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bravo's Compass - Welcome!</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="res/styles/home.css">
+</head>
+<body>
+
+    <div id="transition-bg"></div>
+
+    <div id="intro-screen" class="screen">
+        <a href="login.html" id="admin-login-btn">Admin Login</a>
+
+        <div class="mascot-container">
+            <img id="bravo-img" src="res/images/Bravo Transparent.svg" alt="Bravo the dog mascot">
+            <div id="compass-btn"></div>
+        </div>
+        
+        <div id="welcome-text" class="welcome-text-container">
+            <h1>Bravo's Compass</h1>
+            <p>Let Bravo guide your way!</p>
+            <p class="prompt">Click the compass on his collar to begin.</p>
+        </div>
+    </div>
+
+    <div id="loading-screen" class="screen hidden">
+        <h2>Finding the best path...</h2>
+        <p>Our best boy is on the case!</p>
+    </div>
+    
+    <script src="res/scripts/home-page_script.js"></script>
+
+</body>
+</html>

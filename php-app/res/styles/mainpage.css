@@ -1,0 +1,251 @@
+/**
+ * mainpage.css
+ *
+ * Main stylesheet for the interactive map page.
+ * Contains styles for nodes, paths, UI controls, legends,
+ * and admin/user interaction states.
+ */
+
+/* --- Base & Container Styles --- */
+body {
+    font-family: 'Inter', sans-serif;
+}
+
+#mapContainer {
+    transition: opacity 0.5s ease-in-out;
+    position: relative;
+}
+
+/* --- Node Base & State Styles --- */
+
+/* Base style for all map nodes */
+.node {
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.node:hover,
+.node.draggable:hover {
+    stroke: #38b2ac;
+    stroke-width: 4;
+}
+
+.node.draggable {
+    cursor: move;
+}
+
+/* State: Node is part of the final path */
+.highlight {
+    fill: #68d391;
+    stroke: #f0fff4;
+    stroke-width: 2;
+}
+
+/* State: Node is selected for an admin action (e.g., connect) */
+.selected-for-action {
+    stroke: #f6ad55;
+    stroke-width: 4;
+    stroke-dasharray: 5, 5;
+    animation: pulsing-stroke 2s infinite linear;
+}
+
+/* State: Node is part of a route step being hovered in the sidebar */
+.step-highlight {
+    stroke: #F6AD55;
+    stroke-width: 5px;
+    fill: #F6AD55;
+    animation: pulsing-stroke 1.5s infinite linear;
+}
+
+/* State: Node is selected as the starting point for pathfinding */
+.node.start-node-selected {
+    stroke: #000000;
+    stroke-width: 4;
+    fill: #71f257;
+}
+
+/* State: Node is selected as the ending point for pathfinding */
+.node.end-node-selected {
+    stroke: #000000;
+    stroke-width: 4;
+    fill: #bf0404;
+}
+
+/* --- Node Type Styles --- */
+
+circle.room {
+    fill: #677ca0;
+    stroke: #E2E8F0;
+}
+
+.hallway {
+    fill: #a0aec0;
+    stroke: #718096;
+}
+
+.stairs {
+    fill: #63b3ed;
+    stroke: #e2e8f0;
+}
+
+.elevator {
+    fill: #f6ad55;
+    stroke: #e2e8f0;
+}
+
+.elevator-employee {
+    fill: #dd6b20;
+    stroke: #e2e8f0;
+}
+
+/* --- Node Label Styles --- */
+.node-label {
+    fill: #353535;
+    font-size: 10px;
+    font-weight: 500;
+    text-anchor: middle;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+/* --- Pathfinding Styles --- */
+
+/* The animated line for the calculated route */
+.path {
+    stroke-width: 5px;
+    stroke: #68d391;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    animation: dash 3s linear forwards;
+}
+
+/* --- Dragging States --- */
+
+/* Styles applied to the <body> while dragging a node */
+body.is-dragging {
+    cursor: grabbing;
+    /* Prevent text selection during drag */
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+/* Prevent nodes from capturing mouse events during a drag */
+body.is-dragging .node {
+    pointer-events: none;
+}
+
+/* Optional: Different style for a selected node while dragging */
+body.is-dragging .node.selected-for-action {
+    stroke: #3498db;
+    stroke-width: 3;
+}
+
+/* --- UI Controls: Role & Path Selection --- */
+
+.role-btn {
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    background-color: #4A5568;
+    color: #E2E8F0;
+    transition: all 0.2s ease;
+}
+
+.role-btn:hover {
+    background-color: #718096;
+}
+
+.role-btn.active {
+    background-color: #3182CE;
+    color: white;
+    box-shadow: 0 0 0 2px #4A5568;
+}
+
+/* Style for nodes when in path-selection mode */
+.node.path-selectable:hover {
+    cursor: crosshair;
+    stroke: #F6AD55;
+    stroke-width: 4;
+}
+
+/* --- UI Controls: Admin Panel --- */
+
+.admin-add-btn.active {
+    background-color: #38b2ac;
+    color: white;
+    box-shadow: 0 0 0 2px #4a5568;
+}
+
+/* Hide the default HTML file input element */
+#importMapInput {
+    display: none;
+}
+
+/* --- UI Component: Map Legend --- */
+
+#mapLegendContent {
+    /* Controls the expand/collapse animation */
+    transition: all 0.3s ease-in-out;
+    overflow: hidden;
+    
+    /* Expanded state (default) */
+    max-height: 500px; /* Large enough for content */
+    opacity: 1;
+    margin-top: 0.25rem;
+}
+
+#legendToggleIcon {
+    transition: transform 0.3s ease;
+}
+
+/* Collapsed state: Hides the legend content */
+#mapLegend.collapsed #mapLegendContent {
+    max-height: 0;
+    opacity: 0;
+    margin-top: 0;
+}
+
+/* Rotates the toggle icon when collapsed */
+#mapLegend.collapsed #legendToggleIcon {
+    transform: rotate(-90deg);
+}
+
+/* --- UI Component: Route Steps Panel --- */
+
+.route-step {
+    cursor: pointer;
+    padding: 4px 8px;
+    margin-bottom: 2px;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+}
+
+.route-step:hover {
+    background-color: #4A5568; /* Dark gray hover */
+}
+
+/* --- Keyframe Animations --- */
+
+/* Animates the drawing of the route path */
+@keyframes dash {
+    from {
+        stroke-dasharray: 10000;
+        stroke-dashoffset: 10000;
+    }
+    to {
+        stroke-dasharray: 10000;
+        stroke-dashoffset: 0;
+    }
+}
+
+/* Creates a "marching ants" or pulsing effect */
+@keyframes pulsing-stroke {
+    0% {
+        stroke-dashoffset: 0;
+    }
+    100% {
+        stroke-dashoffset: -20;
+    }
+}

@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive School Navigator</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="res/styles/mainpage.css?v=3">
+</head>
+
+<body class="bg-gray-900 text-white flex flex-col items-center min-h-screen p-4 md:p-6 space-y-6 antialiased">
+
+    <div class="flex items-center space-x-4 mb-0">
+        <h1 class="text-3xl font-bold text-white">Bravo's Compass</h1>
+        
+        <button id="logoutBtn" class="bg-gray-700 hover:bg-gray-600 text-white text-xs font-bold py-1 px-3 rounded-full border border-gray-500 transition-colors duration-300">
+            Logout
+        </button>
+    </div>
+
+    <div id="floorSelector" class="flex space-x-2 flex-shrink-0"></div>
+    
+    <div id="mainContentWrapper" class="w-full max-w-7xl flex flex-col md:flex-row justify-center gap-6">
+
+        <div id="adminPanel" class="w-full md:w-80 lg:w-96 bg-gray-800 p-6 rounded-lg shadow-lg hidden flex-shrink-0">
+            <h2 class="text-lg font-semibold text-white mb-4">Admin Controls</h2>
+            
+            <div id="adminStatus" class="bg-gray-700 p-3 rounded-md mb-4 text-center text-gray-300 text-sm">
+                Drag nodes to move them or select an action below.
+            </div>
+    
+            <p class="text-xs text-gray-400 mb-2 font-semibold">ADD NODES</p>
+            <div class="grid grid-cols-2 gap-2">
+                <button class="admin-add-btn bg-gray-600 hover:bg-gray-500 p-2 rounded-md" data-mode="add" data-type="room">Add Room</button>
+                <button class="admin-add-btn bg-gray-600 hover:bg-gray-500 p-2 rounded-md" data-mode="add" data-type="hallway">Add Hallway</button>
+                <button class="admin-add-btn bg-blue-600 hover:bg-blue-500 p-2 rounded-md" data-mode="add" data-type="stairs">Add Stairs</button>
+                <button class="admin-add-btn bg-orange-500 hover:bg-orange-400 p-2 rounded-md" data-mode="add" data-type="elevator" data-access="all">Public Elevator</button>
+                <button class="admin-add-btn bg-orange-800 hover:bg-orange-700 p-2 rounded-md col-span-2" data-mode="add" data-type="elevator" data-access="employee">Employee Elevator</button>
+            </div>
+            
+            <p class="text-xs text-gray-400 mt-4 mb-2 font-semibold">EDIT MAP</p>
+            <div class="grid grid-cols-2 gap-2">
+                 <button class="admin-add-btn bg-green-600 hover:bg-green-500 p-2 rounded-md" data-mode="connect">Connect Nodes</button>
+                 <button class="admin-add-btn bg-yellow-600 hover:bg-yellow-500 p-2 rounded-md" data-mode="disconnect">Disconnect</button>
+                 <button class="admin-add-btn bg-purple-600 hover:bg-purple-500 p-2 rounded-md" data-mode="rename-node">Rename Room</button>
+                 <button class="admin-add-btn bg-red-700 hover:bg-red-600 p-2 rounded-md" data-mode="delete-node">Delete Node</button>
+                 <button id="deleteFloorBtn" class="bg-red-800 hover:bg-red-700 p-2 rounded-md col-span-2">Delete This Floor</button>
+            </div>
+    
+            <button id="addFloorBtn" class="w-full mt-4 bg-teal-600 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded-md transition duration-300">
+                Add New Floor
+            </button>
+            
+            <button id="setFloorLabelBtn" class="w-full mt-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-md transition duration-300">
+                Set Floor Label
+            </button>
+            
+           <div class="mt-4 pt-4 border-t border-gray-700">
+                <h3 class="text-md font-semibold text-white mb-2">Data Management</h3>
+                 <div class="grid grid-cols-2 gap-2">
+                    <label for="importMapInput" class="w-full text-center bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-md transition duration-300 cursor-pointer">
+                        Import JSON
+                    </label>
+                    <input type="file" id="importMapInput" accept=".json,application/json" class="hidden">
+                    <button id="exportMapBtn" class="w-full bg-green-700 hover:bg-green-800 text-white font-bold py-2 px-4 rounded-md transition duration-300">
+                        Export JSON
+                    </button>
+                </div>
+                <button id="saveToDbBtn" class="w-full mt-2 bg-blue-700 hover:bg-blue-800 text-white font-bold py-2 px-4 rounded-md transition duration-300">
+                    Save Changes to Database
+                </button>
+                
+                <div class="mt-4 border-t border-gray-700 pt-4">
+                    <h3 class="text-md font-semibold text-white mb-2">Floor Plan Image</h3>
+                    <form id="uploadForm" class="flex flex-col gap-2">
+                        <input type="file" id="floorImageInput" name="floorImage" accept="image/*" class="text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-gray-600 file:text-white hover:file:bg-gray-500 cursor-pointer">
+                        <button type="submit" class="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded-md transition duration-300">
+                            Upload Floor Plan
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div id="mapContainer" class="w-full max-w-4xl max-h-[75vh] aspect-video bg-gray-800 rounded-lg shadow-inner border border-gray-700 flex-shrink-0 relative overflow-hidden">
+            <svg id="mapSvg" width="100%" height="100%" viewBox="0 0 800 500" class="w-full h-full"></svg>
+            
+            <div id="mapLegend" class="absolute bottom-2 left-2 bg-gray-900 bg-opacity-90 p-2 rounded-md text-xs text-gray-300 w-48 collapsed z-10 border border-gray-700">
+                <div id="mapLegendHeader" class="font-semibold cursor-pointer flex justify-between items-center select-none">
+                    <span>Legend</span>
+                    <span id="legendToggleIcon" class="ml-2 transform transition-transform duration-300">▼</span>
+                </div>
+                <div id="mapLegendContent" class="space-y-1 transition-all duration-300 ease-in-out overflow-hidden mt-1">
+                    <div class="flex items-center"><span class="w-3 h-3 rounded-full bg-gray-700 mr-2 border border-gray-400"></span>Room</div>
+                    <div class="flex items-center"><span class="w-3 h-3 rounded-full mr-2" style="background-color: #63b3ed;"></span>Stairs</div>
+                    <div class="flex items-center"><span class="w-3 h-3 rounded-full mr-2" style="background-color: #f6ad55;"></span>Public Elevator</div>
+                    <div class="flex items-center"><span class="w-3 h-3 rounded-full mr-2" style="background-color: #dd6b20;"></span>Employee Elevator</div>
+                    <div class="flex items-center"><span class="w-3 h-3 rounded-full bg-gray-400 mr-2"></span>Hallway Node</div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    
+    <div class="w-full max-w-4xl bg-gray-800 p-6 rounded-lg shadow-lg mt-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-2">Your Role</label>
+                    <div id="roleSelector" class="flex flex-wrap gap-2">
+                        </div>
+                </div>
+
+                <div class="pt-4 space-y-2">
+                    <label class="block text-sm font-medium text-gray-300">Route Selection</label>
+                    <div class="flex items-center space-x-2">
+                        <span class="font-medium text-gray-400">Start:</span>
+                        <span id="selectedStartDisplay" class="text-lg font-semibold text-green-400">None</span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <span class="font-medium text-gray-400">End:</span>
+                        <span id="selectedEndDisplay" class="text-lg font-semibold text-red-400">None</span>
+                    </div>
+                </div>
+                
+                <button id="findPathBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md transition duration-300">
+                    Find Path
+                </button>
+            </div>
+
+            <div id="pathResult">
+                <h2 class="text-lg font-semibold text-white">Route</h2>
+                <div id="pathInstructions" class="text-gray-300 mt-2 space-y-1 h-48 overflow-y-auto pr-2 custom-scrollbar">
+                    <p class="text-gray-500">Click a room on the map to select a start point.</p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    
+    <div id="confirmationModal" class="fixed inset-0 bg-black bg-opacity-60 hidden items-center justify-center z-50 backdrop-blur-sm">
+        <div class="bg-gray-800 rounded-lg p-6 shadow-xl w-full max-w-sm border border-gray-700 transform transition-all scale-100">
+            <h3 id="modalTitle" class="text-lg font-bold text-white mb-2">Confirm Action</h3>
+            <p id="modalMessage" class="text-gray-300 mb-6">Are you sure?</p>
+            <div class="flex justify-end space-x-3">
+                <button id="modalCancelBtn" class="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-md transition">Cancel</button>
+                <button id="modalConfirmBtn" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md transition shadow-md">Confirm</button>
+            </div>
+        </div>
+    </div> 
+    
+    <script src="res/scripts/app-main.js?v=3"></script>
+    <script src="res/scripts/app-admin.js?v=3"></script>
+    
+</body>
+</html>

@@ -1,0 +1,286 @@
+/*
+ * home.css
+ *
+ * Styles for the animated introductory/loading screen of the application.
+ * It uses a mobile-first approach, with overrides for larger screens
+ * defined in a media query at the end.
+ */
+
+/* --- General Body & Layout --- */
+
+body {
+    font-family: 'Inter', sans-serif;
+    /* Prevent scrolling on the intro page */
+    overflow: hidden;
+    background-color: #f3f4f6;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* Use dynamic viewport height for better mobile handling */
+    height: 100dvh;
+}
+
+/* --- Screen Containers --- */
+
+/**
+ * .screen is a base class for the main content containers
+ * (#intro-screen and #loading-screen) to share common
+ * layout properties.
+ */
+.screen {
+    text-align: center;
+    padding: 2rem;
+    width: 100%;
+    margin: auto;
+    /* Ensures padding is included in the 'width: 100%' */
+    box-sizing: border-box;
+}
+
+/* Specific layout for the intro content */
+#intro-screen {
+    width: 100%;
+    max-width: 42rem;
+}
+
+/* Specific layout for the loading spinner screen */
+#loading-screen {
+    max-width: 32rem;
+}
+
+/* Utility class to hide elements */
+.hidden {
+    display: none;
+}
+
+/* --- Mascot & Compass Styles --- */
+
+/* * Container for the mascot image and the compass button.
+ * Uses mobile-first viewport units, capped by a max-width.
+ */
+.mascot-container {
+    margin-bottom: 1.5rem;
+    position: relative;
+    /* Base size for mobile (e.g., 80% of viewport width) */
+    width: 80vw;
+    height: 80vw;
+    /* Cap the size on mobile */
+    max-width: 20rem;
+    max-height: 20rem;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* The mascot image itself, with an idle animation */
+#bravo-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    transition: filter 0.3s ease, transform 0.3s ease;
+    animation: idleAnimation 4s ease-in-out infinite;
+}
+
+/* * The compass button, layered on top of the mascot.
+ * Positioned absolutely relative to .mascot-container.
+ */
+#compass-btn {
+    cursor: pointer;
+    position: absolute;
+    /* Positioned over the mascot's compass */
+    top: 78%;
+    left: 50%;
+    width: 28%;
+    height: 28%;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+}
+
+/* --- Text Styles --- */
+
+/* Base mobile styles for intro text */
+.welcome-text-container h1 {
+    font-size: 1.75rem;
+    line-height: 2.25rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 0.5rem;
+}
+
+.welcome-text-container p {
+    color: #6b7280;
+    font-size: 1rem;
+    line-height: 1.5rem;
+    margin: 0;
+}
+
+/* The "Click the compass" prompt */
+.welcome-text-container .prompt {
+    color: #9ca3af;
+    font-size: 1rem;
+    line-height: 1.5rem;
+    margin-top: 1rem;
+}
+
+/* Text styles for the loading screen (light text on dark bg) */
+#loading-screen h2 {
+    font-size: 1.875rem;
+    line-height: 2.25rem;
+    font-weight: 700;
+    color: white;
+}
+
+#loading-screen p {
+    font-size: 1.125rem;
+    margin-top: 0.5rem;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+/* --- Animations & Transitions --- */
+
+/* * This is the yellow background that fades in.
+ * It sits behind the intro content, and is revealed
+ * as the intro content fades out.
+ */
+#transition-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: #EAB308;
+    opacity: 0;
+    /* Sits behind other content */
+    z-index: -1;
+}
+
+/* Class added by JS on compass hover */
+.bravo-hover-effect {
+    filter: drop-shadow(0 0 20px rgba(251, 191, 36, 0.9));
+    transform: scale(1.05);
+}
+
+/* Class added by JS on compass click to exit the intro */
+.zoom-effect {
+    /* Set the origin for the zoom to the compass's location */
+    transform-origin: 50% 78%;
+    animation: zoomInToCompass 1s forwards cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Utility animation classes */
+.bg-fade-in {
+    animation: bgFadeIn 1s forwards;
+}
+.text-fade-out {
+    animation: textFade 0.5s forwards;
+}
+.fade-in {
+    animation: fadeIn 0.5s forwards;
+}
+
+/* --- Keyframe Definitions --- */
+
+/* Simple fade-in for the loading screen content */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* * Main exit animation: Zooms in towards the compass,
+ * moves it up, and fades it out.
+ */
+@keyframes zoomInToCompass {
+    from {
+        transform: scale(1) translateY(0);
+        opacity: 1;
+    }
+    to {
+        transform: scale(15) translateY(-25%);
+        opacity: 0;
+    }
+}
+
+/* Fades out the intro text */
+@keyframes textFade {
+    from { opacity: 1; }
+    to { opacity: 0; }
+}
+
+/* Fades in the yellow background */
+@keyframes bgFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* The mascot's idle "floating" animation */
+@keyframes idleAnimation {
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-12px);
+    }
+}
+
+/* --- Responsive Design --- */
+
+/* * Overrides for tablet-and-up (desktop).
+ * Increases the size of the mascot and text.
+ */
+@media (min-width: 768px) {
+    .mascot-container {
+        /* Set a larger, fixed size for desktop */
+        width: 24rem;
+        height: 24rem;
+        max-width: 24rem;
+        max-height: 24rem;
+    }
+
+    .welcome-text-container h1 {
+        /* Larger font for desktop */
+        font-size: 3rem;
+        line-height: 1;
+    }
+
+    .welcome-text-container p {
+        /* Larger font for desktop */
+        font-size: 1.25rem;
+    }
+}
+
+/* --- Admin Login Button --- */
+#admin-login-btn {
+    position: absolute;
+    top: 1.5rem;
+    right: 1.5rem;
+    text-decoration: none;
+    color: #6b7280; /* Subtle gray */
+    font-size: 0.875rem;
+    font-weight: 600;
+    padding: 0.5rem 1rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 9999px; /* Pill shape */
+    background-color: white;
+    transition: all 0.2s ease;
+    z-index: 10; /* Ensure it's clickable */
+}
+
+#admin-login-btn:hover {
+    color: #1f2937; /* Darker text on hover */
+    border-color: #d1d5db;
+    background-color: #f9fafb;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+/* Ensure it fades out with the rest of the text */
+.text-fade-out #admin-login-btn {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s ease;
+}

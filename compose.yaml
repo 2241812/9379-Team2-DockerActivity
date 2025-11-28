@@ -1,0 +1,48 @@
+services:
+  mysql_db:
+    image: mysql:8.0
+    container_name: bravo_mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: admin123
+      MYSQL_DATABASE: graphDB
+    volumes:
+      - ./db_init:/docker-entrypoint-initdb.d
+      - db_data:/var/lib/mysql
+    networks:
+      - app_network
+
+  nodejs_service:
+    build:
+      context: .
+      dockerfile: Dockerfile.nodejs
+    container_name: bravo_node
+    ports:
+      - "3000:3000"
+    environment:
+      DB_HOST: mysql_db
+      DB_USER: root
+      DB_PASS: admin123
+      DB_NAME: graphDB
+    depends_on:
+      - mysql_db
+    networks:
+      - app_network
+
+  php_service:
+    build:
+      context: .
+      dockerfile: Dockerfile.apache
+    container_name: bravo_php
+    ports:
+      - "80:80"
+    depends_on:
+      - mysql_db
+    networks:
+      - app_network
+
+volumes:
+  db_data:
+
+networks:
+  app_network:
+    driver: bridge
