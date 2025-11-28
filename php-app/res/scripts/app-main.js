@@ -552,7 +552,8 @@ function initializeApp() {
 
     App.UpdateChecker = {
         poll: () => {
-            fetch('/312Team-Bravo-fin/server-user/getMapVersion.php')
+            // FIXED PATH FOR DOCKER
+            fetch('server-user/getMapVersion.php')
                 .then(r => r.ok ? r.json() : null)
                 .then(data => {
                     if (!data || !data.lastUpdated) return;
@@ -584,8 +585,7 @@ function initializeApp() {
         }
     };
 
-   App.init = async () => {
-        // 1. Session Check
+    App.init = async () => {
         try {
             const response = await fetch('http://localhost:3000/api/admin/check-session', {
                 credentials: 'include' 
@@ -600,21 +600,18 @@ function initializeApp() {
             App.State.isAdminLoggedIn = false;
         }
 
-        // --- NEW: Smart Exit Button Logic ---
         const logoutBtn = document.getElementById('logoutBtn');
         if (logoutBtn) {
-            // Update Text based on role
             if (App.State.isAdminLoggedIn) {
                 logoutBtn.textContent = "Logout";
                 logoutBtn.classList.add('bg-red-700', 'hover:bg-red-800');
             } else {
                 logoutBtn.textContent = "Home";
-                logoutBtn.classList.remove('bg-red-700', 'hover:bg-red-800'); // Revert to gray
+                logoutBtn.classList.remove('bg-red-700', 'hover:bg-red-800'); 
             }
 
             logoutBtn.addEventListener('click', async () => {
                 if (App.State.isAdminLoggedIn) {
-                    // Admins get an explicit server logout before redirect
                     try {
                         await fetch('http://localhost:3000/api/logout', { 
                             method: 'POST',
@@ -622,17 +619,11 @@ function initializeApp() {
                         });
                     } catch (e) { console.error(e); }
                 }
-                
-                // Everyone gets redirected to home
-                // The home-page_script.js will perform a cleanup check anyway
                 window.location.href = 'index.html';
             });
         }
-        // ------------------------------------
 
         App.DOM.findPathBtn.addEventListener('click', App.Pathfinder.handleFindPath);
-        // ... (Rest of your Event Listeners and Init logic remains the same) ...
-        
         App.DOM.modalCancelBtn.addEventListener('click', App.Modal.hide);
         App.DOM.modalConfirmBtn.addEventListener('click', () => {
             if (App.State.modalConfirmCallback) App.State.modalConfirmCallback();
@@ -675,7 +666,8 @@ function initializeApp() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-   fetch('/312Team-Bravo-fin/server-user/getData.php')
+   // FIXED PATH FOR DOCKER
+   fetch('server-user/getData.php')
         .then(response => {
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
             return response.json();

@@ -36,7 +36,19 @@ const dbConfig = {
 };
 
 async function getConnection() {
-    return await mysql.createConnection(dbConfig);
+    let retries = 10;
+    while (retries > 0) {
+        try {
+            const conn = await mysql.createConnection(dbConfig);
+            return conn;
+        } catch (err) {
+            console.log(`Database not ready yet... Retrying (${retries} attempts left)`);
+            retries--;
+            // Wait 2 seconds before trying again
+            await new Promise(res => setTimeout(res, 2000));
+        }
+    }
+    throw new Error('Could not connect to database after multiple attempts');
 }
 
 app.post('/api/login', async (req, res) => {

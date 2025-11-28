@@ -39,6 +39,22 @@ services:
       - mysql_db
     networks:
       - app_network
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: bravo_pma
+    environment:
+      PMA_HOST: mysql_db
+      MYSQL_ROOT_PASSWORD: admin123
+    ports:
+      - "8080:80"
+    depends_on:
+      - mysql_db
+    networks:
+      - app_network
+
+
+
+
 
 volumes:
   db_data:
@@ -46,3 +62,4 @@ volumes:
 networks:
   app_network:
     driver: bridge
+
