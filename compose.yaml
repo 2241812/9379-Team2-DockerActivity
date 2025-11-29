@@ -2,7 +2,7 @@ services:
   mysql_db:
     image: mysql:8.0
     container_name: bravo_mysql
-    restart : always
+    restart: always
     environment:
       MYSQL_ROOT_PASSWORD: admin123
       MYSQL_DATABASE: graphDB
@@ -11,13 +11,18 @@ services:
       - db_data:/var/lib/mysql
     networks:
       - app_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-padmin123"]
+      interval: 5s
+      timeout: 5s
+      retries: 10  
 
   nodejs_service:
     build:
       context: .
       dockerfile: Dockerfile.nodejs
     container_name: bravo_node
-    restart : always
+    restart: always
     ports:
       - "3000:3000"
     environment:
@@ -25,36 +30,41 @@ services:
       DB_USER: root
       DB_PASS: admin123
       DB_NAME: graphDB
-    depends_on:
-      - mysql_db
     networks:
       - app_network
+    depends_on:
+      mysql_db:
+        condition: service_healthy
 
   php_service:
     build:
       context: .
       dockerfile: Dockerfile.apache
     container_name: bravo_php
-    restart : always
+    restart: always
     ports:
       - "80:80"
-    depends_on:
-      - mysql_db
     networks:
       - app_network
+    depends_on:
+      mysql_db:
+        condition: service_healthy
+
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
     container_name: bravo_pma
-    restart : always
+    restart: always
     environment:
       PMA_HOST: mysql_db
       MYSQL_ROOT_PASSWORD: admin123
+      PHP_ERROR_REPORTING: E_ALL
     ports:
-      - "8080:80"
-    depends_on:
-      - mysql_db
+      - "8081:80"
     networks:
       - app_network
+    depends_on:
+      mysql_db:
+        condition: service_healthy
 
 volumes:
   db_data:
@@ -62,4 +72,3 @@ volumes:
 networks:
   app_network:
     driver: bridge
-

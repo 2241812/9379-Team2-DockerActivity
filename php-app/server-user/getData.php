@@ -1,13 +1,12 @@
 <?php
-// server-user/getData.php
 
 header('Access-Control-Allow-Origin: *');
 header('Content-Type: application/json');
 
 // DOCKER CONNECTION SETTINGS
-$servername = "mysql_db";  // This MUST match the service name in compose.yaml
+$servername = "mysql_db";  
 $username = "root";
-$password = "admin123";    // This MUST match MYSQL_ROOT_PASSWORD in compose.yaml
+$password = "admin123";    
 $dbname = "graphDB";
 
 // Create connection
@@ -15,7 +14,6 @@ $conn = new mysqli($servername, $username, $password, $dbname);
 
 // Check connection
 if ($conn->connect_error) {
-    // Helpful error message for debugging Docker connections
     die(json_encode(["error" => "Connection failed to Docker DB: " . $conn->connect_error]));
 }
 
@@ -23,7 +21,7 @@ if ($conn->connect_error) {
 $nodesResult = $conn->query("SELECT * FROM nodes");
 $nodes = [];
 while ($row = $nodesResult->fetch_assoc()) {
-    // Ensure numeric fields are actually numbers (important for JS math)
+
     $row['floor'] = (int)$row['floor'];
     $row['x'] = (int)$row['x'];
     $row['y'] = (int)$row['y'];
@@ -50,7 +48,6 @@ $floorPlans = [];
 while ($row = $imagesResult->fetch_assoc()) {
     $floor_num = $row['floor_number'];
     $mime_type = $row['mime_type'];
-    // Convert BLOB to Base64 string so JS can display it as an image
     $base64 = base64_encode($row['image_data']);
     $floorPlans[$floor_num] = "data:$mime_type;base64,$base64";
 }
