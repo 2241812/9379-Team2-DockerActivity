@@ -2,6 +2,7 @@ services:
   mysql_db:
     image: mysql:8.0
     container_name: bravo_mysql
+    restart : always
     environment:
       MYSQL_ROOT_PASSWORD: admin123
       MYSQL_DATABASE: graphDB
@@ -16,6 +17,7 @@ services:
       context: .
       dockerfile: Dockerfile.nodejs
     container_name: bravo_node
+    restart : always
     ports:
       - "3000:3000"
     environment:
@@ -33,6 +35,7 @@ services:
       context: .
       dockerfile: Dockerfile.apache
     container_name: bravo_php
+    restart : always
     ports:
       - "80:80"
     depends_on:
@@ -42,6 +45,7 @@ services:
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
     container_name: bravo_pma
+    restart : always
     environment:
       PMA_HOST: mysql_db
       MYSQL_ROOT_PASSWORD: admin123
@@ -51,10 +55,6 @@ services:
       - mysql_db
     networks:
       - app_network
-
-
-
-
 
 volumes:
   db_data:
