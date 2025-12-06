@@ -5,14 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bravo!</title>
 
+    <!-- Tailwind (must load first) -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
+
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    
-    <link rel="stylesheet" href="res/styles/mainpage.css?v=3">
+
+    <!-- Your CSS must load LAST to override Tailwind -->
+    <link rel="stylesheet" href="res/styles/mainpage.css?ver=4">
 </head>
+
 
 <body class="bg-gray-900 text-white flex flex-col items-center min-h-screen p-4 md:p-6 space-y-6 antialiased">
 
@@ -156,8 +160,8 @@
         </div>
     </div> 
     
-    <script src="res/scripts/app-main.js?v=3"></script>
-    <script src="res/scripts/app-admin.js?v=3"></script>
+    <script src="res/scripts/app-main.js"></script>
+    <script src="res/scripts/app-admin.js"></script>
     
 </body>
 </html>

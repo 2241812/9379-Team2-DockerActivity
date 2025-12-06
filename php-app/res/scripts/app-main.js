@@ -88,10 +88,13 @@ function initializeApp() {
             App.State.currentRole = newRole;
             const isAdmin = (newRole === 'admin');
             
+            // --- LOGIC MERGE: Toggle Body Class for CSS Hiding ---
             if (isAdmin) {
+                document.body.classList.add('admin-mode');
                 if (App.DOM.mainContentWrapper) App.DOM.mainContentWrapper.classList.remove('justify-center');
                 if (typeof App.AdminEditor !== 'undefined') App.AdminEditor.init();
             } else {
+                document.body.classList.remove('admin-mode');
                 if (App.DOM.mainContentWrapper) App.DOM.mainContentWrapper.classList.add('justify-center');
                 if (typeof App.AdminEditor !== 'undefined') App.AdminEditor.shutdown();
             }
@@ -103,6 +106,7 @@ function initializeApp() {
             });
 
             App.Pathfinder.clearHighlights();
+            // Force redraw to ensure classes apply correctly if switching modes
             App.Renderer.redrawMapElements();
         },
 
@@ -183,7 +187,7 @@ function initializeApp() {
             }
         },
  
-       drawMapElements: (floor) => {
+        drawMapElements: (floor) => {
             const isAdmin = App.State.currentRole === 'admin';
             const nodeMap = new Map(App.mapData.nodes.map(n => [n.id, n]));
             
@@ -194,6 +198,7 @@ function initializeApp() {
                 return s && t && s.floor === floor && t.floor === floor;
             });
 
+            // --- 1. DRAW EDGES ---
             const edgeFragment = document.createDocumentFragment();
             edgesToDraw.forEach(edge => {
                 const s = nodeMap.get(edge.source);
@@ -205,16 +210,26 @@ function initializeApp() {
                 line.setAttribute('y2', t.y);
                 line.setAttribute('stroke', App.Config.EDGE_STROKE); 
                 line.setAttribute('stroke-width', App.Config.EDGE_STROKE_WIDTH);
-                line.classList.add('edge');
+                
+                // --- LOGIC MERGE: Add class 'edge' so CSS hides it for non-admins ---
+                line.classList.add('edge'); 
+                
                 edgeFragment.appendChild(line);
             });
             App.DOM.edgeContainer.appendChild(edgeFragment);
 
+            // --- 2. DRAW NODES ---
             const nodeFragment = document.createDocumentFragment();
             nodesToDraw.forEach(node => {
                 const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
                 group.setAttribute('id', `g-${node.id}`);
-                group.classList.add('node-label-group');
+                
+                // --- LOGIC MERGE: Add classes for CSS hiding ---
+                if (node.type === 'hallway') {
+                    group.classList.add('hallway-group'); // CSS will hide this unless admin
+                } else {
+                    group.classList.add('node-label-group');
+                }
                 
                 const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
                 circle.setAttribute('id', node.id); 
@@ -506,7 +521,7 @@ function initializeApp() {
                 const polyline = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
                 polyline.setAttribute('points', points);
                 polyline.setAttribute('class', 'path');
-               App.DOM.pathContainer.appendChild(polyline);
+                App.DOM.pathContainer.appendChild(polyline);
             }
             
             segment.forEach(nodeId => { 

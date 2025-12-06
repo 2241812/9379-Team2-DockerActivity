@@ -1,9 +1,5 @@
 /**
  * mainpage.css
- *
- * Main stylesheet for the interactive map page.
- * Contains styles for nodes, paths, UI controls, legends,
- * and admin/user interaction states.
  */
 
 /* --- Base & Container Styles --- */
@@ -14,11 +10,10 @@ body {
 #mapContainer {
     transition: opacity 0.5s ease-in-out;
     position: relative;
+    background-color: #1a202c; /* Ensure dark background behind map */
 }
 
 /* --- Node Base & State Styles --- */
-
-/* Base style for all map nodes */
 .node {
     transition: all 0.2s ease;
     cursor: pointer;
@@ -41,7 +36,7 @@ body {
     stroke-width: 2;
 }
 
-/* State: Node is selected for an admin action (e.g., connect) */
+/* State: Node is selected for an admin action */
 .selected-for-action {
     stroke: #f6ad55;
     stroke-width: 4;
@@ -49,7 +44,7 @@ body {
     animation: pulsing-stroke 2s infinite linear;
 }
 
-/* State: Node is part of a route step being hovered in the sidebar */
+/* State: Node is part of a route step being hovered */
 .step-highlight {
     stroke: #F6AD55;
     stroke-width: 5px;
@@ -57,14 +52,14 @@ body {
     animation: pulsing-stroke 1.5s infinite linear;
 }
 
-/* State: Node is selected as the starting point for pathfinding */
+/* State: Start Node */
 .node.start-node-selected {
     stroke: #000000;
     stroke-width: 4;
     fill: #71f257;
 }
 
-/* State: Node is selected as the ending point for pathfinding */
+/* State: End Node */
 .node.end-node-selected {
     stroke: #000000;
     stroke-width: 4;
@@ -72,7 +67,6 @@ body {
 }
 
 /* --- Node Type Styles --- */
-
 circle.room {
     fill: #677ca0;
     stroke: #E2E8F0;
@@ -100,49 +94,46 @@ circle.room {
 
 /* --- Node Label Styles --- */
 .node-label {
-    fill: #353535;
-    font-size: 10px;
-    font-weight: 500;
+    fill: #e2e8f0; /* Lighter text for dark mode */
+    font-size: 11px;
+    font-weight: 600;
     text-anchor: middle;
     user-select: none;
     -webkit-user-select: none;
+    text-shadow: 0px 1px 2px rgba(0,0,0,0.8);
+    pointer-events: none;
 }
 
 /* --- Pathfinding Styles --- */
-
-/* The animated line for the calculated route */
 .path {
-    stroke-width: 5px;
+    stroke-width: 6px;
     stroke: #68d391;
+    stroke-opacity: 0.9;
     fill: none;
     stroke-linecap: round;
     stroke-linejoin: round;
-    animation: dash 3s linear forwards;
+    animation: dash 1.5s linear forwards;
+    filter: drop-shadow(0px 2px 3px rgba(0,0,0,0.5));
+    pointer-events: none;
 }
 
 /* --- Dragging States --- */
-
-/* Styles applied to the <body> while dragging a node */
 body.is-dragging {
     cursor: grabbing;
-    /* Prevent text selection during drag */
     user-select: none;
     -webkit-user-select: none;
 }
 
-/* Prevent nodes from capturing mouse events during a drag */
 body.is-dragging .node {
     pointer-events: none;
 }
 
-/* Optional: Different style for a selected node while dragging */
 body.is-dragging .node.selected-for-action {
     stroke: #3498db;
     stroke-width: 3;
 }
 
-/* --- UI Controls: Role & Path Selection --- */
-
+/* --- UI Controls --- */
 .role-btn {
     padding: 0.5rem 1rem;
     border-radius: 0.375rem;
@@ -163,14 +154,11 @@ body.is-dragging .node.selected-for-action {
     box-shadow: 0 0 0 2px #4A5568;
 }
 
-/* Style for nodes when in path-selection mode */
 .node.path-selectable:hover {
     cursor: crosshair;
     stroke: #F6AD55;
     stroke-width: 4;
 }
-
-/* --- UI Controls: Admin Panel --- */
 
 .admin-add-btn.active {
     background-color: #38b2ac;
@@ -178,20 +166,15 @@ body.is-dragging .node.selected-for-action {
     box-shadow: 0 0 0 2px #4a5568;
 }
 
-/* Hide the default HTML file input element */
 #importMapInput {
     display: none;
 }
 
 /* --- UI Component: Map Legend --- */
-
 #mapLegendContent {
-    /* Controls the expand/collapse animation */
     transition: all 0.3s ease-in-out;
     overflow: hidden;
-    
-    /* Expanded state (default) */
-    max-height: 500px; /* Large enough for content */
+    max-height: 500px;
     opacity: 1;
     margin-top: 0.25rem;
 }
@@ -200,52 +183,68 @@ body.is-dragging .node.selected-for-action {
     transition: transform 0.3s ease;
 }
 
-/* Collapsed state: Hides the legend content */
 #mapLegend.collapsed #mapLegendContent {
     max-height: 0;
     opacity: 0;
     margin-top: 0;
 }
 
-/* Rotates the toggle icon when collapsed */
 #mapLegend.collapsed #legendToggleIcon {
     transform: rotate(-90deg);
 }
 
 /* --- UI Component: Route Steps Panel --- */
-
 .route-step {
     cursor: pointer;
-    padding: 4px 8px;
-    margin-bottom: 2px;
+    padding: 6px 10px;
+    margin-bottom: 4px;
     border-radius: 4px;
+    background-color: rgba(74, 85, 104, 0.3);
     transition: background-color 0.2s ease;
+    font-size: 0.9rem;
 }
 
 .route-step:hover {
-    background-color: #4A5568; /* Dark gray hover */
+    background-color: #4A5568;
 }
 
-/* --- Keyframe Animations --- */
-
-/* Animates the drawing of the route path */
+/* --- Animations --- */
 @keyframes dash {
-    from {
-        stroke-dasharray: 10000;
-        stroke-dashoffset: 10000;
-    }
-    to {
-        stroke-dasharray: 10000;
-        stroke-dashoffset: 0;
-    }
+    from { stroke-dasharray: 10000; stroke-dashoffset: 10000; }
+    to { stroke-dasharray: 10000; stroke-dashoffset: 0; }
 }
 
-/* Creates a "marching ants" or pulsing effect */
 @keyframes pulsing-stroke {
-    0% {
-        stroke-dashoffset: 0;
-    }
-    100% {
-        stroke-dashoffset: -20;
-    }
+    0% { stroke-dashoffset: 0; }
+    100% { stroke-dashoffset: -20; }
+}
+
+/* =========================================
+   VISIBILITY CONTROL (The "Hiding" Logic)
+   ========================================= */
+
+/* 1. DEFAULT: HIDE Edges and Hallway Dots */
+.edge {
+    display: none !important;
+}
+
+.hallway-group {
+    display: none !important;
+}
+
+/* 2. ADMIN MODE: SHOW Edges and Hallway Dots */
+body.admin-mode .edge {
+    display: block !important;
+    opacity: 0.5; 
+}
+
+body.admin-mode .hallway-group {
+    display: block !important;
+}
+
+/* 3. Ensure the Path is always on top and visible */
+#path-container {
+    display: block !important;
+    z-index: 50;
+    pointer-events: none;
 }
