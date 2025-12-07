@@ -21,7 +21,10 @@ App.AdminEditor = {
         saveToDbBtn: document.getElementById('saveToDbBtn'),
         mapSvg: document.getElementById('mapSvg'),
         adminStatus: document.getElementById('adminStatus'),
-        uploadForm: document.getElementById('uploadForm')
+        
+        // NEW: Elements for Floor Plan Upload
+        uploadForm: document.getElementById('uploadForm'),
+        floorImageInput: document.getElementById('floorImageInput')
     },
     
     constants: {
@@ -35,18 +38,21 @@ App.AdminEditor = {
 
     init: () => {
         const controls = App.AdminEditor.adminDOMElements;
-        controls.addFloorBtn.addEventListener('click', App.AdminEditor.handleAddNewFloor);
-        controls.deleteFloorBtn.addEventListener('click', App.AdminEditor.handleDeleteFloor);
-        controls.setFloorLabelBtn.addEventListener('click', App.AdminEditor.handleSetFloorLabel);
-        controls.exportMapBtn.addEventListener('click', App.AdminEditor.handleExportMapData);
-        controls.importMapInput.addEventListener('change', App.AdminEditor.handleImportMapData);
+        
+        // Event Listeners
+        if (controls.addFloorBtn) controls.addFloorBtn.addEventListener('click', App.AdminEditor.handleAddNewFloor);
+        if (controls.deleteFloorBtn) controls.deleteFloorBtn.addEventListener('click', App.AdminEditor.handleDeleteFloor);
+        if (controls.setFloorLabelBtn) controls.setFloorLabelBtn.addEventListener('click', App.AdminEditor.handleSetFloorLabel);
+        if (controls.exportMapBtn) controls.exportMapBtn.addEventListener('click', App.AdminEditor.handleExportMapData);
+        if (controls.importMapInput) controls.importMapInput.addEventListener('change', App.AdminEditor.handleImportMapData);
 
         if (controls.saveToDbBtn) {
             controls.saveToDbBtn.addEventListener('click', App.AdminEditor.handleSaveMapToDatabase);
         }
 
+        // NEW: Listener for Floor Plan Upload Form
         if (controls.uploadForm) {
-            controls.uploadForm.addEventListener('submit', App.AdminEditor.handleUploadFloorPlan);
+            controls.uploadForm.addEventListener('submit', App.AdminEditor.handleUploadFloorImage);
         }
 
         controls.adminAddBtns.forEach(btn => {
@@ -59,13 +65,34 @@ App.AdminEditor = {
     },
 
     shutdown: () => {
-    
+        const controls = App.AdminEditor.adminDOMElements;
+        
+        if (controls.addFloorBtn) controls.addFloorBtn.removeEventListener('click', App.AdminEditor.handleAddNewFloor);
+        if (controls.deleteFloorBtn) controls.deleteFloorBtn.removeEventListener('click', App.AdminEditor.handleDeleteFloor);
+        if (controls.setFloorLabelBtn) controls.setFloorLabelBtn.removeEventListener('click', App.AdminEditor.handleSetFloorLabel);
+        if (controls.exportMapBtn) controls.exportMapBtn.removeEventListener('click', App.AdminEditor.handleExportMapData);
+        if (controls.importMapInput) controls.importMapInput.removeEventListener('change', App.AdminEditor.handleImportMapData);
+
+        if (controls.saveToDbBtn) {
+            controls.saveToDbBtn.removeEventListener('click', App.AdminEditor.handleSaveMapToDatabase);
+        }
+
+        // NEW: Remove Listener for Upload
+        if (controls.uploadForm) {
+            controls.uploadForm.removeEventListener('submit', App.AdminEditor.handleUploadFloorImage);
+        }
+
+        controls.adminAddBtns.forEach(btn => {
+            btn.removeEventListener('click', App.AdminEditor.handleSetEditMode);
+        });
+
         window.removeEventListener('mousemove', App.AdminEditor.drag);
         window.removeEventListener('mouseup', App.AdminEditor.endDrag);
+        window.removeEventListener('mouseleave', App.AdminEditor.endDrag);
+
         App.AdminEditor.setEditMode(null);
     },
 
-  
     handleSetEditMode: (event) => {
         const btn = event.currentTarget;
         App.AdminEditor.setEditMode(btn);
@@ -73,7 +100,9 @@ App.AdminEditor = {
 
     setEditMode: (targetBtn) => {
         if (App.AdminEditor.isDragging) App.AdminEditor.endDrag();
+
         const btns = App.AdminEditor.adminDOMElements.adminAddBtns;
+        
         if (!targetBtn) {
             App.AdminEditor.editMode = { mode: null, type: null, access: null, firstNodeId: null };
             btns.forEach(b => b.classList.remove('active'));
@@ -81,10 +110,19 @@ App.AdminEditor = {
             App.Renderer.redrawMapElements();
             return;
         }
+
         const { mode, type, access } = targetBtn.dataset;
+
         btns.forEach(b => b.classList.remove('active'));
         targetBtn.classList.add('active');
-        App.AdminEditor.editMode = { mode, type, access, firstNodeId: null };
+
+        App.AdminEditor.editMode = { 
+            mode, 
+            type, 
+            access, 
+            firstNodeId: null 
+        };
+        
         App.AdminEditor._updateStatusText();
         App.Renderer.redrawMapElements();
     },
@@ -93,7 +131,9 @@ App.AdminEditor = {
         const targetId = evt.target.id;
         const targetNode = App.mapData.nodes.find(n => n.id === targetId);
         const { mode } = App.AdminEditor.editMode;
+
         if (!mode) return;
+
         if (mode === 'add') {
             if (targetNode) return;
             const pos = App.AdminEditor.getMousePosition(evt);
@@ -106,26 +146,125 @@ App.AdminEditor = {
         }
     },
 
+    // 1. UPDATE THE UPLOAD FUNCTION
+    handleUploadFloorImage: async (event) => {
+        event.preventDefault();
+
+        const fileInput = App.AdminEditor.adminDOMElements.floorImageInput;
+        const file = fileInput.files[0];
+        
+        if (!file) {
+            alert("Please select an image file first.");
+            return;
+        }
+
+        const floorNum = App.State.currentFloor;
+        const formData = new FormData();
+        formData.append('floorImage', file);
+        formData.append('floorNumber', floorNum);
+
+        const status = App.AdminEditor.adminDOMElements.adminStatus;
+        status.textContent = "Uploading image...";
+        status.style.color = App.AdminEditor.constants.STATUS_COLORS.WARNING;
+
+        try {
+            // FIX: Point to PHP script instead of localhost:3000
+            const response = await fetch('server-user/uploadFloorPlan.php', {
+                method: 'POST',
+                body: formData
+                // Note: Don't set 'Content-Type', browser does it automatically for FormData
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                status.textContent = "Floor plan uploaded!";
+                status.style.color = App.AdminEditor.constants.STATUS_COLORS.SUCCESS;
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                throw new Error(result.message);
+            }
+        } catch (error) {
+            console.error(error);
+            status.textContent = "Upload failed: " + error.message;
+            status.style.color = App.AdminEditor.constants.STATUS_COLORS.ERROR;
+        }
+        
+        fileInput.value = '';
+    },
+
     handleAddNewFloor: () => {
         const existingFloors = [...new Set(App.mapData.nodes.map(n => n.floor))];
         let newFloorNum = existingFloors.length > 0 ? Math.max(...existingFloors) + 1 : 1;
-        App.mapData.nodes.push({
-            id: `H-${newFloorNum}-START`, name: "Hallway", type: "hallway",
-            floor: newFloorNum, x: 400, y: 250, access: "all"
-        });
+        const lastFloorNum = newFloorNum - 1;
+
+        let nodesAdded = 0;
+        // Check for existing floor plans in JS memory (legacy)
+        const lastFloorPlan = (App.mapData.floorPlans && App.mapData.floorPlans[lastFloorNum]) 
+            ? App.mapData.floorPlans[lastFloorNum] : null;
+
+        if (lastFloorNum > 0) {
+            const copyNode = (node, suffix, name, newAccess) => {
+                App.mapData.nodes.push({ 
+                    id: `${suffix}-${newFloorNum}-${Date.now()}`, 
+                    name: name, 
+                    type: node.type, 
+                    floor: newFloorNum, 
+                    x: node.x, 
+                    y: node.y, 
+                    access: newAccess 
+                });
+                nodesAdded++;
+            };
+
+            const stairs = App.mapData.nodes.find(n => n.floor === lastFloorNum && n.type === 'stairs');
+            const empElev = App.mapData.nodes.find(n => n.floor === lastFloorNum && n.type === 'elevator' && n.access === 'employee');
+            const pubElev = App.mapData.nodes.find(n => n.floor === lastFloorNum && n.type === 'elevator' && n.access === 'all');
+            
+            if (stairs) copyNode(stairs, 'S', "Stairs", "all");
+            if (empElev) copyNode(empElev, 'E-Emp', "Elevator (Emp)", "employee");
+            if (pubElev) copyNode(pubElev, 'E-Pub', "Elevator", "all");
+            
+            if (lastFloorPlan) {
+                if (!App.mapData.floorPlans) App.mapData.floorPlans = {};
+                App.mapData.floorPlans[newFloorNum] = lastFloorPlan;
+            }
+        }
+
+        if (nodesAdded === 0) {
+            App.mapData.nodes.push({
+                id: `H-${newFloorNum}-START`, name: "Hallway", type: "hallway",
+                floor: newFloorNum, x: 400, y: 250, access: "all"
+            });
+        }
+
         App.AdminEditor.adminDOMElements.adminStatus.textContent = `Floor ${newFloorNum} added successfully!`;
         App.Renderer.switchFloor(newFloorNum);
     },
 
     handleDeleteFloor: () => {
         const floors = [...new Set(App.mapData.nodes.map(n => n.floor))];
-        if (floors.length <= 1 && App.mapData.nodes.length > 0) return;
-        App.Modal.show(`Delete Floor ${App.State.currentFloor}?`, "This will remove all nodes on this floor.", () => {
-            App.mapData.nodes = App.mapData.nodes.filter(n => n.floor !== App.State.currentFloor);
-            // Also clean up edges
-            const validIds = new Set(App.mapData.nodes.map(n => n.id));
-            App.mapData.edges = App.mapData.edges.filter(e => validIds.has(e.source) && validIds.has(e.target));
+        if (floors.length === 0) return;
+        if (floors.length <= 1 && App.mapData.nodes.length > 0) {
+            App.AdminEditor.adminDOMElements.adminStatus.textContent = "Cannot delete the last remaining floor.";
+            return;
+        }
+
+        const label = App.AdminEditor._getFloorLabel(App.State.currentFloor);
+
+        App.Modal.show(`Delete ${label}?`, "This will remove all nodes on this floor.", () => {
+            const otherNodes = App.mapData.nodes.filter(n => n.floor !== App.State.currentFloor);
+            const keepIds = new Set(otherNodes.map(n => n.id));
+
+            App.mapData.nodes = otherNodes;
+            App.mapData.edges = App.mapData.edges.filter(e => keepIds.has(e.source) && keepIds.has(e.target));
+
+            if (App.mapData.floorPlans) delete App.mapData.floorPlans[App.State.currentFloor];
+            if (App.mapData.floorLabels) delete App.mapData.floorLabels[App.State.currentFloor];
+
             App.Modal.hide();
+            App.Renderer.populateSelectors();
+
             const remaining = [...new Set(App.mapData.nodes.map(n => n.floor))];
             App.Renderer.switchFloor(remaining.length > 0 ? Math.min(...remaining) : 1);
         });
@@ -135,8 +274,11 @@ App.AdminEditor = {
         if (!App.mapData.floorLabels) App.mapData.floorLabels = {};
         const curr = App.mapData.floorLabels[App.State.currentFloor] || `Floor ${App.State.currentFloor}`;
         const newLabel = prompt(`Enter display label for Floor ${App.State.currentFloor}:`, curr.replace('Floor ', ''));
+
         if (newLabel && newLabel.trim()) {
             App.mapData.floorLabels[App.State.currentFloor] = newLabel.trim();
+        } else if (newLabel === '') {
+            delete App.mapData.floorLabels[App.State.currentFloor];
         }
         App.Renderer.updateFloorButtons();
     },
@@ -154,6 +296,7 @@ App.AdminEditor = {
     handleImportMapData: (event) => {
         const file = event.target.files[0];
         if (!file) return;
+
         const reader = new FileReader();
         reader.onload = (e) => {
             try {
@@ -164,14 +307,19 @@ App.AdminEditor = {
                     App.Utils.buildGraphMap(); 
                     App.Renderer.populateSelectors();
                     App.Renderer.updateFloorButtons();
-                    App.Renderer.switchFloor(1);
+                    const first = App.mapData.nodes.length > 0 ? Math.min(...App.mapData.nodes.map(n => n.floor)) : 1;
+                    App.Renderer.switchFloor(first);
                 }
-            } catch (err) { console.error(err); }
+            } catch (err) {
+                console.error(err);
+                App.AdminEditor.adminDOMElements.adminStatus.textContent = "Error parsing JSON file.";
+            }
         };
         reader.readAsText(file);
+        event.target.value = '';
     },
 
-    // --- FIX: Point to Node.js Server (Port 3000) ---
+    // 2. UPDATE THE SAVE DATA FUNCTION
     handleSaveMapToDatabase: () => {
         const status = App.AdminEditor.adminDOMElements.adminStatus;
         if (!App.mapData.nodes.length) {
@@ -183,11 +331,10 @@ App.AdminEditor = {
         status.textContent = "Saving to database...";
         status.style.color = App.AdminEditor.constants.STATUS_COLORS.WARNING;
 
-        // FIXED URL: Using absolute path to Node server
-        fetch('http://localhost:3000/api/admin/save-map', {
+        // FIX: Ensure path is correct relative to your HTML
+        fetch('server-user/saveMapData.php', { 
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            credentials: 'include', // Important for Session Cookie
             body: JSON.stringify(App.mapData)
         })
         .then(r => r.json())
@@ -197,7 +344,7 @@ App.AdminEditor = {
         })
         .catch((e) => {
             console.error(e);
-            status.textContent = "Error: Could not connect to Node.js server (Port 3000).";
+            status.textContent = "Error: Could not connect to server.";
             status.style.color = App.AdminEditor.constants.STATUS_COLORS.ERROR;
         })
         .finally(() => {
@@ -208,46 +355,40 @@ App.AdminEditor = {
         });
     },
 
-    handleUploadFloorPlan: (e) => {
-        e.preventDefault();
-        const formData = new FormData(e.target);
-        formData.append('floorNumber', App.State.currentFloor);
-
-        fetch('http://localhost:3000/api/admin/upload-floorplan', {
-            method: 'POST',
-            credentials: 'include',
-            body: formData
-        })
-        .then(r => r.json())
-        .then(data => {
-            alert(data.message);
-            if(data.success) location.reload();
-        })
-        .catch(err => console.error(err));
-    },
-
     startDrag: (evt, nodeId) => {
         if (App.AdminEditor.editMode.mode) return;
+
         evt.preventDefault();
         App.AdminEditor.isDragging = true;
         App.AdminEditor.draggedNodeId = nodeId;
+
         const pos = App.AdminEditor.getMousePosition(evt);
         const node = App.mapData.nodes.find(n => n.id === nodeId);
+        
         App.AdminEditor.offset.x = pos.x - node.x;
         App.AdminEditor.offset.y = pos.y - node.y;
+
         document.body.classList.add('is-dragging');
     },
 
     drag: (evt) => {
         if (!App.AdminEditor.isDragging) return;
         evt.preventDefault();
+
         if (App.AdminEditor.dragAnimationFrame) cancelAnimationFrame(App.AdminEditor.dragAnimationFrame);
+
         App.AdminEditor.dragAnimationFrame = requestAnimationFrame(() => {
             const pos = App.AdminEditor.getMousePosition(evt);
             const node = App.mapData.nodes.find(n => n.id === App.AdminEditor.draggedNodeId);
-            if (!node) { App.AdminEditor.endDrag(); return; }
+
+            if (!node) {
+                App.AdminEditor.endDrag();
+                return;
+            }
+
             node.x = Math.round(pos.x - App.AdminEditor.offset.x);
             node.y = Math.round(pos.y - App.AdminEditor.offset.y);
+
             App.Renderer.redrawMapElements();
         });
     },
@@ -255,6 +396,7 @@ App.AdminEditor = {
     endDrag: () => {
         if (!App.AdminEditor.isDragging) return;
         if (App.AdminEditor.dragAnimationFrame) cancelAnimationFrame(App.AdminEditor.dragAnimationFrame);
+
         App.AdminEditor.isDragging = false;
         App.AdminEditor.draggedNodeId = null;
         document.body.classList.remove('is-dragging');
@@ -285,12 +427,24 @@ App.AdminEditor = {
         const { mode, type } = App.AdminEditor.editMode;
         let text = 'Drag nodes to move them or select an action.';
         let cursor = 'default';
+
         if (mode) {
-            if (mode === 'add') { text = `Click map to add new ${type}.`; cursor = 'crosshair'; }
-            else if (mode === 'connect') { text = `Click first node to connect.`; cursor = 'pointer'; }
-            else if (mode === 'disconnect') { text = `Click first node to disconnect.`; cursor = 'pointer'; }
-            else if (mode === 'delete-node') { text = `Click a node to delete it.`; cursor = 'pointer'; }
-            else if (mode === 'rename-node') { text = `Click a room to rename it.`; cursor = 'pointer'; }
+            if (mode === 'add') {
+                text = `Click map to add new ${type}.`;
+                cursor = 'crosshair';
+            } else if (mode === 'connect') {
+                text = `Click first node to connect.`;
+                cursor = 'pointer';
+            } else if (mode === 'disconnect') {
+                text = `Click first node to disconnect.`;
+                cursor = 'pointer';
+            } else if (mode === 'delete-node') {
+                text = `Click a node to delete it.`;
+                cursor = 'pointer';
+            } else if (mode === 'rename-node') {
+                text = `Click a room to rename it.`;
+                cursor = 'pointer';
+            }
         }
         App.AdminEditor.adminDOMElements.adminStatus.textContent = text;
         App.AdminEditor.adminDOMElements.mapSvg.style.cursor = cursor;
@@ -309,6 +463,17 @@ App.AdminEditor = {
             access: access || 'all'
         };
         App.mapData.nodes.push(newNode);
+
+        const nodesOnFloor = App.mapData.nodes.filter(n => n.floor === floor && n.id !== newNode.id);
+        if (nodesOnFloor.length > 0) {
+            let closest = null, min = Infinity;
+            nodesOnFloor.forEach(n => {
+                const dist = Math.hypot(n.x - newNode.x, n.y - newNode.y);
+                if (dist < min) { min = dist; closest = n; }
+            });
+            if (closest) App.mapData.edges.push({ source: newNode.id, target: closest.id });
+        }
+
         if (newNode.type === 'room') App.Renderer.populateSelectors();
         App.Renderer.redrawMapElements();
     },
@@ -316,13 +481,29 @@ App.AdminEditor = {
     _handleConnectNode: (targetNode) => {
         const editMode = App.AdminEditor.editMode;
         const status = App.AdminEditor.adminDOMElements.adminStatus;
+
         if (!editMode.firstNodeId) {
             editMode.firstNodeId = targetNode.id;
             status.textContent = `Selected ${targetNode.name}. Select second node.`;
         } else {
             if (editMode.firstNodeId === targetNode.id) return;
+            const firstNode = App.mapData.nodes.find(n => n.id === editMode.firstNodeId);
+
+            if (firstNode.floor !== targetNode.floor) {
+                const isStairs = firstNode.type === 'stairs' && targetNode.type === 'stairs';
+                const isElevator = firstNode.type === 'elevator' && targetNode.type === 'elevator';
+                if (!isStairs && !isElevator) {
+                    status.textContent = "Error: Cross-floor links must be matching Stairs or Elevators.";
+                    setTimeout(() => { 
+                         App.AdminEditor.editMode.firstNodeId = null; 
+                         App.AdminEditor._updateStatusText(); 
+                    }, 2000);
+                    return;
+                }
+            }
+
             App.mapData.edges.push({ source: editMode.firstNodeId, target: targetNode.id });
-            status.textContent = `Connected!`;
+            status.textContent = `Connected ${firstNode.name} and ${targetNode.name}!`;
             editMode.firstNodeId = null; 
             App.Utils.buildGraphMap();
         }
@@ -332,16 +513,22 @@ App.AdminEditor = {
     _handleDisconnectNode: (targetNode) => {
         const editMode = App.AdminEditor.editMode;
         const status = App.AdminEditor.adminDOMElements.adminStatus;
+
         if (!editMode.firstNodeId) {
             editMode.firstNodeId = targetNode.id;
-            status.textContent = `Selected ${targetNode.name}. Click second node.`;
+            status.textContent = `Selected ${targetNode.name}. Click second node to disconnect.`;
         } else {
             if (editMode.firstNodeId === targetNode.id) return;
             const firstId = editMode.firstNodeId;
+            const prevCount = App.mapData.edges.length;
+
             App.mapData.edges = App.mapData.edges.filter(e =>
                 !((e.source === firstId && e.target === targetNode.id) || (e.source === targetNode.id && e.target === firstId))
             );
-            status.textContent = `Disconnected.`;
+
+            status.textContent = (App.mapData.edges.length < prevCount) 
+                ? `Disconnected.` : `No connection found.`;
+            
             editMode.firstNodeId = null;
             App.Utils.buildGraphMap();
         }
@@ -352,6 +539,7 @@ App.AdminEditor = {
         App.Modal.show(`Delete ${targetNode.name}?`, 'This will remove the node and connections.', () => {
             App.mapData.nodes = App.mapData.nodes.filter(n => n.id !== targetNode.id);
             App.mapData.edges = App.mapData.edges.filter(e => e.source !== targetNode.id && e.target !== targetNode.id);
+
             if (targetNode.type === 'room') App.Renderer.populateSelectors();
             App.Utils.buildGraphMap();
             App.Renderer.redrawMapElements();
@@ -360,8 +548,11 @@ App.AdminEditor = {
     },
 
     _handleRenameNode: (targetNode) => {
-        if (targetNode.type !== 'room') return;
-        const newName = prompt(`Enter new name:`, targetNode.name);
+        if (targetNode.type !== 'room') {
+            App.AdminEditor.adminDOMElements.adminStatus.textContent = 'Only rooms can be renamed.';
+            return;
+        }
+        const newName = prompt(`Enter new name for "${targetNode.name}":`, targetNode.name);
         if (newName && newName.trim()) {
             targetNode.name = newName.trim();
             App.Renderer.redrawMapElements();
